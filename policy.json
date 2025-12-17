@@ -1,0 +1,51 @@
+[
+  {
+    "name": "low_risk_keyword",
+    "action": "APPROVED",
+    "rules": {
+      "type": "keyword",
+      "keywords": ["good", "excellent"],
+      "match": "any"
+    }
+  },
+  {
+    "name": "high_risk_user",
+    "action": "BLOCKED",
+    "rules": {
+      "type": "user",
+      "users": ["bad_user", "spammer"]
+    }
+  },
+  {
+    "name": "medium_risk_composite",
+    "action": "PENDING_REVIEW",
+    "rules": {
+      "or": [
+        {
+          "type": "keyword",
+          "keywords": ["maybe", "uncertain"]
+        },
+        {
+          "type": "user",
+          "users": ["unknown_user"]
+        }
+      ]
+    }
+  },
+  {
+    "name": "high_risk_and",
+    "action": "REJECTED",
+    "rules": {
+      "and": [
+        {
+          "type": "keyword",
+          "keywords": ["bad"]
+        },
+        {
+          "type": "user",
+          "users": ["suspicious_user"]
+        }
+      ]
+    }
+  }
+]
