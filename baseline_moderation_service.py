@@ -104,6 +104,34 @@ def submit_content(req: SubmitContentRequest):
     content_id = str(uuid.uuid4())
     ts = _now()
 
+    # Policy-driven moderation first (if enabled)
+    try:
+        from policy_engine import evaluate_request, decision_from_evaluation
+        eval_res = evaluate_request(req)
+    except Exception:
+        eval_res = None
+
+    if eval_res:
+        status, reason = decision_from_evaluation(eval_res)
+        item = ContentItem(
+            content_id=content_id,
+            user_id=req.user_id,
+            text=req.text,
+            status=status,
+            created_at=ts,
+            updated_at=ts,
+            reason=reason,
+        )
+        CONTENTS[content_id] = item
+        # Only add to review queue if status is PENDING_REVIEW
+        if status == ContentStatus.PENDING_REVIEW:
+            REVIEW_QUEUE.append(content_id)
+        return SubmitContentResponse(
+            content_id=content_id,
+            status=item.status,
+            reason=item.reason,
+        )
+
     hit = _hit_blacklist(req.text)
     if hit is not None:
         item = ContentItem(
