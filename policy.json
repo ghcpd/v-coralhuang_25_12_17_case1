@@ -1,0 +1,32 @@
+{
+  "policies": [
+    {
+      "id": "auto_approve_trusted",
+      "description": "Auto-approve trusted users",
+      "operator": "OR",
+      "rules": [
+        { "type": "user", "user_prefixes": ["trusted_"] }
+      ],
+      "risk": "LOW",
+      "action": "APPROVE"
+    },
+    {
+      "id": "suspicious_keyword",
+      "description": "Keywords that require manual review",
+      "rules": [
+        { "type": "keyword", "keywords": ["maybe", "suspicious"] }
+      ],
+      "risk": "MEDIUM",
+      "action": "REVIEW"
+    },
+    {
+      "id": "block_bad",
+      "description": "High risk content",
+      "rules": [
+        { "type": "keyword", "keywords": ["illegal", "fraud"] }
+      ],
+      "risk": "HIGH",
+      "action": "BLOCK"
+    }
+  ]
+}
