@@ -1,0 +1,100 @@
+{
+  "enabled": true,
+  "policies": [
+    {
+      "id": "policy_1_auto_approve_verified",
+      "name": "Auto-approve verified users",
+      "description": "Automatically approve content from verified user IDs",
+      "risk_level": "LOW",
+      "action": "APPROVED",
+      "rules": [
+        {
+          "type": "user_id",
+          "match_type": "explicit",
+          "values": ["user_verified_1", "user_verified_2"]
+        }
+      ],
+      "composition": "OR"
+    },
+    {
+      "id": "policy_2_auto_reject_explicit_banned",
+      "name": "Auto-reject explicit banned users",
+      "description": "Automatically reject content from banned user IDs",
+      "risk_level": "HIGH",
+      "action": "REJECTED",
+      "rules": [
+        {
+          "type": "user_id",
+          "match_type": "explicit",
+          "values": ["user_banned_1", "user_banned_2"]
+        }
+      ],
+      "composition": "OR"
+    },
+    {
+      "id": "policy_3_block_dangerous_keywords",
+      "name": "Block dangerous keywords",
+      "description": "Block content containing dangerous keywords",
+      "risk_level": "HIGH",
+      "action": "BLOCKED",
+      "rules": [
+        {
+          "type": "keyword",
+          "match_type": "substring",
+          "values": ["bomb", "exploit", "vulnerability", "crack"]
+        }
+      ],
+      "composition": "OR"
+    },
+    {
+      "id": "policy_4_suspicious_content",
+      "name": "Suspicious content requiring review",
+      "description": "Route suspicious content to manual review",
+      "risk_level": "MEDIUM",
+      "action": "PENDING_REVIEW",
+      "rules": [
+        {
+          "type": "keyword",
+          "match_type": "substring",
+          "values": ["suspicious", "urgent", "click here", "limited time"]
+        }
+      ],
+      "composition": "OR"
+    },
+    {
+      "id": "policy_5_trusted_domain_users",
+      "name": "Trusted domain users auto-approve",
+      "description": "Auto-approve content from users with trusted domain emails",
+      "risk_level": "LOW",
+      "action": "APPROVED",
+      "rules": [
+        {
+          "type": "user_id",
+          "match_type": "prefix",
+          "values": ["admin_", "trusted_"]
+        }
+      ],
+      "composition": "OR"
+    },
+    {
+      "id": "policy_6_combined_check",
+      "name": "Combined spam detection",
+      "description": "Content must not have spam keywords AND must not be from spam-prone users",
+      "risk_level": "MEDIUM",
+      "action": "PENDING_REVIEW",
+      "rules": [
+        {
+          "type": "keyword",
+          "match_type": "substring",
+          "values": ["discount", "offer", "buy now", "free"]
+        },
+        {
+          "type": "user_id",
+          "match_type": "prefix",
+          "values": ["guest_"]
+        }
+      ],
+      "composition": "AND"
+    }
+  ]
+}
