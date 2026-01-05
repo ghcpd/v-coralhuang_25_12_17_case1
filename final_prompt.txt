@@ -8,3 +8,205 @@
 ## 1. Background & Existing Functionality (Baseline)
 
 You are taking over an existing **Content Moderation Service** implemented in **Python + FastAPI**.
+
+The current system supports the following baseline capabilities:
+
+1. **Keyword Blacklist Blocking**
+
+   * When content is submitted, if it matches any keyword in a blacklist, the content is immediately blocked.
+   * The response status is `BLOCKED` with a reason.
+
+2. **Manual Review Queue**
+
+   * Content that does not hit the blacklist is placed into a manual review queue.
+   * Its status is set to `PENDING_REVIEW`.
+
+3. **Human Review Decisions**
+
+   * Reviewers can approve or reject content in the queue.
+   * Final states: `APPROVED` or `REJECTED`.
+
+You will be provided with a baseline implementation file:
+`baseline_moderation_service.py`
+
+Your task is to **extend this system with a new feature** without breaking existing behavior.
+
+---
+
+## 2. Product Roadmap Constraint
+
+The product roadmap explicitly states:
+
+> “Future versions must reduce manual operational effort, minimize configuration errors, and improve moderation response time through automation.”
+
+Your implementation **must align with this direction**.
+
+---
+
+## 3. New Feature to Implement
+
+### Policy-driven Multi-stage Moderation
+
+You must implement a **configurable, policy-driven moderation decision engine** that introduces automated decision-making before manual review.
+
+---
+
+### 3.1 Functional Objectives
+
+When content is submitted, the system should make an automated decision based on **external policy configuration**:
+
+* **Low Risk** → Automatically approve (`APPROVED`)
+* **Medium Risk** → Send to manual review (`PENDING_REVIEW`)
+* **High Risk** → Automatically reject (`REJECTED`) or block (`BLOCKED`) according to policy
+
+This replaces the current “blacklist-or-manual-review-only” flow when policies are enabled.
+
+---
+
+### 3.2 Policy Configuration Requirements (Mandatory)
+
+Policies **must NOT be hard-coded**.
+
+* Policies must be loaded from an external file
+  (e.g. `policy.json` or `policy.jsonl`, you may choose and document your decision)
+
+* The policy engine must support at least:
+
+  1. **Keyword-based rules**
+  2. **User-based rules**
+
+     * e.g. explicit user ID lists or prefix-based matching
+  3. **Rule composition**
+
+     * AND / OR logic (at least one required, both preferred)
+
+* The design must be **extensible**:
+
+  * Adding a new rule type must not require rewriting the core decision flow
+
+---
+
+### 3.3 Decision Output Requirements
+
+The response of `POST /content/submit` must include:
+
+* `status`: final moderation result
+  (`APPROVED`, `PENDING_REVIEW`, `REJECTED`, or `BLOCKED`)
+* `reason`: a clear, traceable explanation of:
+
+  * which policy/rule matched
+  * why the decision was made
+
+---
+
+### 3.4 Backward Compatibility (Mandatory)
+
+* The original blacklist behavior must remain supported.
+* If no policy configuration is provided, or policies are disabled:
+
+  * The system must behave exactly like the baseline version.
+* If both blacklist and policies are enabled:
+
+  * You must clearly define execution order (policy first vs blacklist first)
+  * This decision must be documented in the README and covered by tests.
+
+---
+
+## 4. Required Deliverables (All Mandatory)
+
+You must submit a **fully runnable project**, not just explanations.
+
+### 4.1 Implementation Code
+
+* Extend the baseline service
+* Clear structure is expected
+  (e.g. `policy/`, `engine/`, `api/` modules or equivalent)
+
+### 4.2 Automated Tests
+
+* Use **pytest**
+* Tests must minimally cover:
+
+  * Baseline behavior regression (no policy enabled)
+  * Low-risk auto-approval
+  * Medium-risk routing to manual review
+  * High-risk auto-reject or block
+  * Rule composition (AND or OR)
+  * `reason` field correctness
+
+### 4.3 One-click Test Script
+
+* Provide `run_tests` or `run_tests.sh`
+* Running the script must:
+
+  * Set up dependencies (or use containerized environment)
+  * Execute the full test suite automatically
+
+### 4.4 Reproducible Environment
+
+Provide at least one of the following (both preferred):
+
+* `requirements.txt` + virtual environment instructions
+* OR `Dockerfile` (and optional docker-compose)
+
+### 4.5 README
+
+Your `README.md` must include:
+
+* Overview of baseline functionality
+* Description of the new policy-driven moderation feature
+* How to configure policies (file format + examples)
+* How to run the service
+* How to run tests using `run_tests`
+* Key design decisions (e.g. policy vs blacklist execution order)
+
+---
+
+## 5. Expected Project Structure
+
+You may adjust naming, but your output must clearly contain:
+
+```
+.
+├── baseline_moderation_service.py
+├── policy.json / policy.jsonl
+├── requirements.txt
+├── run_tests or run_tests.sh
+├── README.md
+├── src/ (optional)
+└── tests/
+```
+
+---
+
+## 6. Evaluation Criteria
+
+### Pass
+
+* Policy rules are truly configuration-driven
+* Baseline behavior remains intact when policies are disabled
+* `run_tests` works in a clean environment
+* Tests are meaningful and automated
+* Reasons are traceable and explainable
+* README allows full reproduction
+
+### Fail
+
+* Rules are hard-coded
+* Only design or pseudo-answers are provided
+* No automated tests or no one-click execution
+* Baseline behavior is broken
+* README is incomplete or unusable
+
+---
+
+## 7. Output Instructions
+
+Your response must include:
+
+1. Directory structure
+2. Full contents of all files you created or modified
+   (code, tests, configs, scripts, README)
+
+Do **not** provide plans, TODOs, or high-level suggestions.
+Only submit **executable, verifiable deliverables**.
