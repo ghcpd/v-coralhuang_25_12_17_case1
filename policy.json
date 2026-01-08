@@ -1,0 +1,26 @@
+[
+  {
+    "id": "rule_block_known_bad_user",
+    "priority": 10,
+    "type": "user",
+    "users": ["bad_user"],
+    "outcome": "BLOCK",
+    "description": "Block known bad user"
+  },
+  {
+    "id": "rule_approve_safe_keyword",
+    "priority": 20,
+    "type": "keyword",
+    "keywords": ["safe"],
+    "outcome": "APPROVE",
+    "description": "Auto-approve safe content"
+  },
+  {
+    "id": "rule_review_maybe",
+    "priority": 30,
+    "type": "keyword",
+    "keywords": ["maybe"],
+    "outcome": "PENDING_REVIEW",
+    "description": "Medium risk content"
+  }
+]

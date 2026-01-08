@@ -55,6 +55,10 @@ BLACKLIST: List[str] = ["spam", "scam", "illegal"]  # baseline static list
 CONTENTS: Dict[str, ContentItem] = {}
 REVIEW_QUEUE: List[str] = []  # store content_id in FIFO order
 
+# Policy engine (config-driven rules). Policy file: policy.json (defaults) or controlled by POLICY_FILE env var
+from policy import PolicyEngine
+policy_engine = PolicyEngine()
+
 
 def _now() -> float:
     return time.time()
@@ -104,6 +108,68 @@ def submit_content(req: SubmitContentRequest):
     content_id = str(uuid.uuid4())
     ts = _now()
 
+    # Policy-driven decision (if policies enabled). Policies take precedence over blacklist when present.
+    if policy_engine.enabled:
+        result = policy_engine.evaluate(req.text, req.user_id)
+        if result is not None:
+            outcome = result["outcome"].upper()
+            rule = result["rule"]
+            reason = f"Policy matched: {rule.id} - {rule.description or ''}; {result['explanation']}"
+
+            if outcome == "APPROVE":
+                item = ContentItem(
+                    content_id=content_id,
+                    user_id=req.user_id,
+                    text=req.text,
+                    status=ContentStatus.APPROVED,
+                    created_at=ts,
+                    updated_at=ts,
+                    reason=reason,
+                )
+                CONTENTS[content_id] = item
+                return SubmitContentResponse(content_id=content_id, status=item.status, reason=item.reason)
+
+            if outcome == "PENDING_REVIEW":
+                item = ContentItem(
+                    content_id=content_id,
+                    user_id=req.user_id,
+                    text=req.text,
+                    status=ContentStatus.PENDING_REVIEW,
+                    created_at=ts,
+                    updated_at=ts,
+                    reason=reason,
+                )
+                CONTENTS[content_id] = item
+                REVIEW_QUEUE.append(content_id)
+                return SubmitContentResponse(content_id=content_id, status=item.status, reason=item.reason)
+
+            if outcome in ("REJECT", "REJECTED"):
+                item = ContentItem(
+                    content_id=content_id,
+                    user_id=req.user_id,
+                    text=req.text,
+                    status=ContentStatus.REJECTED,
+                    created_at=ts,
+                    updated_at=ts,
+                    reason=reason,
+                )
+                CONTENTS[content_id] = item
+                return SubmitContentResponse(content_id=content_id, status=item.status, reason=item.reason)
+
+            if outcome in ("BLOCK", "BLOCKED"):
+                item = ContentItem(
+                    content_id=content_id,
+                    user_id=req.user_id,
+                    text=req.text,
+                    status=ContentStatus.BLOCKED,
+                    created_at=ts,
+                    updated_at=ts,
+                    reason=reason,
+                )
+                CONTENTS[content_id] = item
+                return SubmitContentResponse(content_id=content_id, status=item.status, reason=item.reason)
+
+    # Fallback: original blacklist behavior (unchanged when policies are disabled or don't match)
     hit = _hit_blacklist(req.text)
     if hit is not None:
         item = ContentItem(

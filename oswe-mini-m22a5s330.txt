@@ -1,0 +1,1005 @@
+User: # Agent Evaluation Prompt
+
+**Category:** Feature & Improvement
+**Sub-Type:** New Feature (Implementation)
+
+---
+
+## 1. Background & Existing Functionality (Baseline)
+
+You are taking over an existing **Content Moderation Service** implemented in **Python + FastAPI**.
+
+The current system supports the following baseline capabilities:
+
+1. **Keyword Blacklist Blocking**
+
+   * When content is submitted, if it matches any keyword in a blacklist, the content is immediately blocked.
+   * The response status is `BLOCKED` with a reason.
+
+2. **Manual Review Queue**
+
+   * Content that does not hit the blacklist is placed into a manual review queue.
+   * Its status is set to `PENDING_REVIEW`.
+
+3. **Human Review Decisions**
+
+   * Reviewers can approve or reject content in the queue.
+   * Final states: `APPROVED` or `REJECTED`.
+
+You will be provided with a baseline implementation file:
+`baseline_moderation_service.py`
+
+Your task is to **extend this system with a new feature** without breaking existing behavior.
+
+---
+
+## 2. Product Roadmap Constraint
+
+The product roadmap explicitly states:
+
+> “Future versions must reduce manual operational effort, minimize configuration errors, and improve moderation response time through automation.”
+
+Your implementation **must align with this direction**.
+
+---
+
+## 3. New Feature to Implement
+
+### Policy-driven Multi-stage Moderation
+
+You must implement a **configurable, policy-driven moderation decision engine** that introduces automated decision-making before manual review.
+
+---
+
+### 3.1 Functional Objectives
+
+When content is submitted, the system should make an automated decision based on **external policy configuration**:
+
+* **Low Risk** → Automatically approve (`APPROVED`)
+* **Medium Risk** → Send to manual review (`PENDING_REVIEW`)
+* **High Risk** → Automatically reject (`REJECTED`) or block (`BLOCKED`) according to policy
+
+This replaces the current “blacklist-or-manual-review-only” flow when policies are enabled.
+
+---
+
+### 3.2 Policy Configuration Requirements (Mandatory)
+
+Policies **must NOT be hard-coded**.
+
+* Policies must be loaded from an external file
+  (e.g. `policy.json` or `policy.jsonl`, you may choose and document your decision)
+
+* The policy engine must support at least:
+
+  1. **Keyword-based rules**
+  2. **User-based rules**
+
+     * e.g. explicit user ID lists or prefix-based matching
+  3. **Rule composition**
+
+     * AND / OR logic (at least one required, both preferred)
+
+* The design must be **extensible**:
+
+  * Adding a new rule type must not require rewriting the core decision flow
+
+---
+
+### 3.3 Decision Output Requirements
+
+The response of `POST /content/submit` must include:
+
+* `status`: final moderation result
+  (`APPROVED`, `PENDING_REVIEW`, `REJECTED`, or `BLOCKED`)
+* `reason`: a clear, traceable explanation of:
+
+  * which policy/rule matched
+  * why the decision was made
+
+---
+
+### 3.4 Backward Compatibility (Mandatory)
+
+* The original blacklist behavior must remain supported.
+* If no policy configuration is provided, or policies are disabled:
+
+  * The system must behave exactly like the baseline version.
+* If both blacklist and policies are enabled:
+
+  * You must clearly define execution order (policy first vs blacklist first)
+  * This decision must be documented in the README and covered by tests.
+
+---
+
+## 4. Required Deliverables (All Mandatory)
+
+You must submit a **fully runnable project**, not just explanations.
+
+### 4.1 Implementation Code
+
+* Extend the baseline service
+* Clear structure is expected
+  (e.g. `policy/`, `engine/`, `api/` modules or equivalent)
+
+### 4.2 Automated Tests
+
+* Use **pytest**
+* Tests must minimally cover:
+
+  * Baseline behavior regression (no policy enabled)
+  * Low-risk auto-approval
+  * Medium-risk routing to manual review
+  * High-risk auto-reject or block
+  * Rule composition (AND or OR)
+  * `reason` field correctness
+
+### 4.3 One-click Test Script
+
+* Provide `run_tests` or `run_tests.sh`
+* Running the script must:
+
+  * Set up dependencies (or use containerized environment)
+  * Execute the full test suite automatically
+
+### 4.4 Reproducible Environment
+
+Provide at least one of the following (both preferred):
+
+* `requirements.txt` + virtual environment instructions
+* OR `Dockerfile` (and optional docker-compose)
+
+### 4.5 README
+
+Your `README.md` must include:
+
+* Overview of baseline functionality
+* Description of the new policy-driven moderation feature
+* How to configure policies (file format + examples)
+* How to run the service
+* How to run tests using `run_tests`
+* Key design decisions (e.g. policy vs blacklist execution order)
+
+---
+
+## 5. Expected Project Structure
+
+You may adjust naming, but your output must clearly contain:
+
+```
+.
+├── baseline_moderation_service.py
+├── policy.json / policy.jsonl
+├── requirements.txt
+├── run_tests or run_tests.sh
+├── README.md
+├── src/ (optional)
+└── tests/
+```
+
+---
+
+## 6. Evaluation Criteria
+
+### Pass
+
+* Policy rules are truly configuration-driven
+* Baseline behavior remains intact when policies are disabled
+* `run_tests` works in a clean environment
+* Tests are meaningful and automated
+* Reasons are traceable and explainable
+* README allows full reproduction
+
+### Fail
+
+* Rules are hard-coded
+* Only design or pseudo-answers are provided
+* No automated tests or no one-click execution
+* Baseline behavior is broken
+* README is incomplete or unusable
+
+---
+
+## 7. Output Instructions
+
+Your response must include:
+
+1. Directory structure
+2. Full contents of all files you created or modified
+   (code, tests, configs, scripts, README)
+
+Do **not** provide plans, TODOs, or high-level suggestions.
+Only submit **executable, verifiable deliverables**.
+
+
+GitHub Copilot: Status: I'll add the policy engine module, tests, config and supporting files, then update the service to use the engine and add tests and run scripts. I'll create new files and modify baseline_moderation_service.py accordingly.
+
+Created [](file:///c%3A/Bug_Bash/25_12_17/v-coralhuang_25_12_17_case1/policy/__init__.py)
+
+Created [](file:///c%3A/Bug_Bash/25_12_17/v-coralhuang_25_12_17_case1/policy/engine.py)
+
+Created [](file:///c%3A/Bug_Bash/25_12_17/v-coralhuang_25_12_17_case1/policy.json)
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Read [](file:///c%3A/Bug_Bash/25_12_17/v-coralhuang_25_12_17_case1/baseline_moderation_service.py)
+
+Status: Updating submit_content to use the PolicyEngine first, then fall back to blacklist when policies don't match. I'll replace the function body to implement policy-driven decisions and keep fallback behavior.
+
+Using "Replace String in File"
+
+
+```
+
+```
+Status: Creating pytest test suite that validates baseline behavior, policy-driven decisions, rule composition and the defined policy vs blacklist execution order. I'll add multiple tests and use temp policy files where needed.
+
+Created [](file:///c%3A/Bug_Bash/25_12_17/v-coralhuang_25_12_17_case1/tests/test_policy_and_baseline.py)
+
+Next I'll add a requirements list, a small run_tests script that installs dependencies and runs pytest, and a README describing the feature and usage.
+
+Created [](file:///c%3A/Bug_Bash/25_12_17/v-coralhuang_25_12_17_case1/requirements.txt)
+
+Created [](file:///c%3A/Bug_Bash/25_12_17/v-coralhuang_25_12_17_case1/run_tests)
+
+Created [](file:///c%3A/Bug_Bash/25_12_17/v-coralhuang_25_12_17_case1/run_tests.sh)
+
+Created [](file:///c%3A/Bug_Bash/25_12_17/v-coralhuang_25_12_17_case1/README.md)
+
+Status: Running the test suite to validate the new feature and baseline behavior. I'll execute the test runner script.
+
+Ran terminal command: ./run_tests.sh
+
+Ran terminal command: python run_tests
+
+Ran terminal command: python - << 'PY'
+from fastapi.testclient import TestClient
+print('fastapi import ok')
+PY
+
+Ran terminal command: python -c "from fastapi.testclient import TestClient; print('fastapi import ok')"
+
+Ran terminal command: python -c 'from fastapi.testclient import TestClient; print("fastapi import ok")'
+
+Status: Updating pinned package versions to use Pydantic v2 and a compatible FastAPI to avoid import errors on Python 3.14. I'll edit requirements.txt accordingly and re-run tests.
+
+Using "Replace String in File"
+
+
+```
+
+```
+
+
+Ran terminal command: python run_tests
+
+Ran terminal command: python .\run_tests
+
+Ran terminal command: python run_tests
+
+Ran terminal command: python -m pip install -r requirements.txt
+
+Installing packages fastapi, pydantic>=2.6.0, pytest, requests, uvicorn in Python 3.14 (64-bit)
+Completed with input: {
+  "packageList": [
+    "fastapi",
+    "uvicorn",
+    "pydantic>=2.6.0",
+    "pytest",
+    "requests"
+  ],
+  "resourcePath": "c:\\Bug_Bash\\25_12_17\\v-coralhuang_25_12_17_case1"
+}
+
+Ran terminal command: pytest -q
+
+Ran terminal command: python -m pytest -q
+
+Ran `pylanceRunCodeSnippet` 
+Completed with input: {
+  "workspaceRoot": "c:\\Bug_Bash\\25_12_17\\v-coralhuang_25_12_17_case1",
+  "codeSnippet": "import pytest\nimport sys\nrc = pytest.main([\"-q\", \"tests\"]) \nprint('pytest exit code:', rc)\nsys.exit(rc)\n",
+  "timeout": 120000
+}
+
+Directory structure
+.
+├── baseline_moderation_service.py
+├── policy.json
+├── requirements.txt
+├── run_tests
+├── run_tests.sh
+├── README.md
+├── policy
+│   ├── __init__.py
+│   └── engine.py
+└── tests
+    └── test_policy_and_baseline.py
+
+Files (full contents)
+
+--- baseline_moderation_service.py ---
+# baseline_moderation_service.py
+# Baseline content moderation service:
+# - Keyword blacklist
+# - Manual review queue
+# - Block interception on blacklist hit
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+from enum import Enum
+from typing import Dict, List, Optional
+import uuid
+import time
+
+app = FastAPI(title="Baseline Content Moderation Service", version="0.1.0")
+
+
+class ContentStatus(str, Enum):
+    PENDING_REVIEW = "PENDING_REVIEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    BLOCKED = "BLOCKED"
+
+
+class SubmitContentRequest(BaseModel):
+    user_id: str = Field(..., min_length=1)
+    text: str = Field(..., min_length=1, max_length=5000)
+
+
+class SubmitContentResponse(BaseModel):
+    content_id: str
+    status: ContentStatus
+    reason: Optional[str] = None
+
+
+class ReviewDecisionRequest(BaseModel):
+    reviewer_id: str = Field(..., min_length=1)
+    decision: ContentStatus  # APPROVED or REJECTED
+    note: Optional[str] = Field(default=None, max_length=1000)
+
+
+class ContentItem(BaseModel):
+    content_id: str
+    user_id: str
+    text: str
+    status: ContentStatus
+    created_at: float
+    updated_at: float
+    reason: Optional[str] = None
+    reviewer_id: Optional[str] = None
+    review_note: Optional[str] = None
+
+
+# --- In-memory stores (baseline) ---
+BLACKLIST: List[str] = ["spam", "scam", "illegal"]  # baseline static list
+CONTENTS: Dict[str, ContentItem] = {}
+REVIEW_QUEUE: List[str] = []  # store content_id in FIFO order
+
+# Policy engine (config-driven rules). Policy file: policy.json (defaults) or controlled by POLICY_FILE env var
+from policy import PolicyEngine
+policy_engine = PolicyEngine()
+
+
+def _now() -> float:
+    return time.time()
+
+
+def _hit_blacklist(text: str) -> Optional[str]:
+    # Simple substring match (baseline)
+    lower = text.lower()
+    for kw in BLACKLIST:
+        if kw.lower() in lower:
+            return kw
+    return None
+
+
+@app.get("/health")
+def health():
+    return {"ok": True}
+
+
+@app.get("/blacklist")
+def list_blacklist():
+    return {"keywords": BLACKLIST}
+
+
+@app.post("/blacklist")
+def add_blacklist_keyword(keyword: str):
+    keyword = keyword.strip()
+    if not keyword:
+        raise HTTPException(status_code=400, detail="keyword cannot be empty")
+    if keyword in BLACKLIST:
+        return {"added": False, "keywords": BLACKLIST}
+    BLACKLIST.append(keyword)
+    return {"added": True, "keywords": BLACKLIST}
+
+
+@app.delete("/blacklist")
+def remove_blacklist_keyword(keyword: str):
+    keyword = keyword.strip()
+    if keyword in BLACKLIST:
+        BLACKLIST.remove(keyword)
+        return {"removed": True, "keywords": BLACKLIST}
+    return {"removed": False, "keywords": BLACKLIST}
+
+
+@app.post("/content/submit", response_model=SubmitContentResponse)
+def submit_content(req: SubmitContentRequest):
+    content_id = str(uuid.uuid4())
+    ts = _now()
+
+    # Policy-driven decision (if policies enabled). Policies take precedence over blacklist when present.
+    if policy_engine.enabled:
+        result = policy_engine.evaluate(req.text, req.user_id)
+        if result is not None:
+            outcome = result["outcome"].upper()
+            rule = result["rule"]
+            reason = f"Policy matched: {rule.id} - {rule.description or ''}; {result['explanation']}"
+
+            if outcome == "APPROVE":
+                item = ContentItem(
+                    content_id=content_id,
+                    user_id=req.user_id,
+                    text=req.text,
+                    status=ContentStatus.APPROVED,
+                    created_at=ts,
+                    updated_at=ts,
+                    reason=reason,
+                )
+                CONTENTS[content_id] = item
+                return SubmitContentResponse(content_id=content_id, status=item.status, reason=item.reason)
+
+            if outcome == "PENDING_REVIEW":
+                item = ContentItem(
+                    content_id=content_id,
+                    user_id=req.user_id,
+                    text=req.text,
+                    status=ContentStatus.PENDING_REVIEW,
+                    created_at=ts,
+                    updated_at=ts,
+                    reason=reason,
+                )
+                CONTENTS[content_id] = item
+                REVIEW_QUEUE.append(content_id)
+                return SubmitContentResponse(content_id=content_id, status=item.status, reason=item.reason)
+
+            if outcome in ("REJECT", "REJECTED"):
+                item = ContentItem(
+                    content_id=content_id,
+                    user_id=req.user_id,
+                    text=req.text,
+                    status=ContentStatus.REJECTED,
+                    created_at=ts,
+                    updated_at=ts,
+                    reason=reason,
+                )
+                CONTENTS[content_id] = item
+                return SubmitContentResponse(content_id=content_id, status=item.status, reason=item.reason)
+
+            if outcome in ("BLOCK", "BLOCKED"):
+                item = ContentItem(
+                    content_id=content_id,
+                    user_id=req.user_id,
+                    text=req.text,
+                    status=ContentStatus.BLOCKED,
+                    created_at=ts,
+                    updated_at=ts,
+                    reason=reason,
+                )
+                CONTENTS[content_id] = item
+                return SubmitContentResponse(content_id=content_id, status=item.status, reason=item.reason)
+
+    # Fallback: original blacklist behavior (unchanged when policies are disabled or don't match)
+    hit = _hit_blacklist(req.text)
+    if hit is not None:
+        item = ContentItem(
+            content_id=content_id,
+            user_id=req.user_id,
+            text=req.text,
+            status=ContentStatus.BLOCKED,
+            created_at=ts,
+            updated_at=ts,
+            reason=f"Blacklisted keyword hit: {hit}",
+        )
+        CONTENTS[content_id] = item
+        return SubmitContentResponse(
+            content_id=content_id,
+            status=item.status,
+            reason=item.reason,
+        )
+
+    # Not blocked -> require manual review in baseline
+    item = ContentItem(
+        content_id=content_id,
+        user_id=req.user_id,
+        text=req.text,
+        status=ContentStatus.PENDING_REVIEW,
+        created_at=ts,
+        updated_at=ts,
+        reason="Requires manual review",
+    )
+    CONTENTS[content_id] = item
+    REVIEW_QUEUE.append(content_id)
+
+    return SubmitContentResponse(
+        content_id=content_id,
+        status=item.status,
+        reason=item.reason,
+    )
+
+
+@app.get("/content/{content_id}", response_model=ContentItem)
+def get_content(content_id: str):
+    item = CONTENTS.get(content_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="content not found")
+    return item
+
+
+@app.get("/review/queue")
+def get_review_queue(limit: int = 20):
+    if limit <= 0:
+        raise HTTPException(status_code=400, detail="limit must be > 0")
+    ids = REVIEW_QUEUE[:limit]
+    items = [CONTENTS[i] for i in ids if i in CONTENTS]
+    return {"count": len(items), "items": items}
+
+
+@app.post("/review/{content_id}")
+def review_content(content_id: str, req: ReviewDecisionRequest):
+    item = CONTENTS.get(content_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="content not found")
+
+    if item.status != ContentStatus.PENDING_REVIEW:
+        raise HTTPException(
+            status_code=409,
+            detail=f"content status is {item.status}, cannot review",
+        )
+
+    if req.decision not in (ContentStatus.APPROVED, ContentStatus.REJECTED):
+        raise HTTPException(status_code=400, detail="decision must be APPROVED or REJECTED")
+
+    item.status = req.decision
+    item.updated_at = _now()
+    item.reviewer_id = req.reviewer_id
+    item.review_note = req.note
+
+    # Remove from queue if present
+    try:
+        REVIEW_QUEUE.remove(content_id)
+    except ValueError:
+        pass
+
+    CONTENTS[content_id] = item
+    return {"content_id": content_id, "status": item.status, "reviewer_id": item.reviewer_id}
+
+--- engine.py ---
+import json
+import os
+from typing import Any, Dict, List, Optional
+
+
+class Rule:
+    def __init__(self, rule_id: str, outcome: str, description: Optional[str] = None, priority: int = 100):
+        self.id = rule_id
+        self.outcome = outcome  # "APPROVE", "PENDING_REVIEW", "REJECT", "BLOCK"
+        self.description = description
+        self.priority = priority
+
+    def matches(self, text: str, user_id: str) -> bool:
+        raise NotImplementedError
+
+
+class KeywordRule(Rule):
+    def __init__(self, rule_id: str, keywords: List[str], **kwargs):
+        super().__init__(rule_id, **kwargs)
+        self.keywords = [k.lower() for k in keywords]
+
+    def matches(self, text: str, user_id: str) -> bool:
+        if not text:
+            return False
+        lower = text.lower()
+        for k in self.keywords:
+            if k in lower:
+                return True
+        return False
+
+
+class UserRule(Rule):
+    def __init__(self, rule_id: str, users: Optional[List[str]] = None, user_prefixes: Optional[List[str]] = None, **kwargs):
+        super().__init__(rule_id, **kwargs)
+        self.users = set(users or [])
+        self.user_prefixes = user_prefixes or []
+
+    def matches(self, text: str, user_id: str) -> bool:
+        if not user_id:
+            return False
+        if user_id in self.users:
+            return True
+        for p in self.user_prefixes:
+            if user_id.startswith(p):
+                return True
+        return False
+
+
+class CompositeRule(Rule):
+    def __init__(self, rule_id: str, operator: str, rules: List[Rule], **kwargs):
+        super().__init__(rule_id, **kwargs)
+        self.operator = operator.upper()
+        self.rules = rules
+
+    def matches(self, text: str, user_id: str) -> bool:
+        if self.operator == "AND":
+            return all(r.matches(text, user_id) for r in self.rules)
+        else:
+            # default OR
+            return any(r.matches(text, user_id) for r in self.rules)
+
+
+_RULE_FACTORY = {
+    "keyword": KeywordRule,
+    "user": UserRule,
+    "composite": CompositeRule,
+}
+
+
+def _instantiate_rule(defn: Dict[str, Any]) -> Rule:
+    rtype = defn.get("type")
+    rule_id = defn.get("id", defn.get("name", "unnamed_rule"))
+    outcome = defn.get("outcome") or defn.get("effect") or "PENDING_REVIEW"
+    description = defn.get("description")
+    priority = int(defn.get("priority", 100))
+
+    if rtype == "keyword":
+        return KeywordRule(rule_id=rule_id, keywords=defn.get("keywords", []), outcome=outcome, description=description, priority=priority)
+    elif rtype == "user":
+        return UserRule(rule_id=rule_id, users=defn.get("users"), user_prefixes=defn.get("user_prefixes"), outcome=outcome, description=description, priority=priority)
+    elif rtype == "composite":
+        operator = defn.get("operator", "OR")
+        sub_defs = defn.get("rules", [])
+        sub_rules = [_instantiate_rule(sub) for sub in sub_defs]
+        return CompositeRule(rule_id=rule_id, operator=operator, rules=sub_rules, outcome=outcome, description=description, priority=priority)
+    else:
+        raise ValueError(f"unknown rule type: {rtype}")
+
+
+class PolicyEngine:
+    def __init__(self, policy_file: Optional[str] = None):
+        self.policy_file = policy_file or os.getenv("POLICY_FILE", "policy.json")
+        self.enabled = False
+        self.rules: List[Rule] = []
+        self.load(self.policy_file)
+
+    def load(self, policy_file: Optional[str] = None):
+        self.rules = []
+        if policy_file:
+            self.policy_file = policy_file
+        if not os.path.exists(self.policy_file):
+            self.enabled = False
+            return
+        try:
+            with open(self.policy_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            instantiated = []
+            for defn in data:
+                r = _instantiate_rule(defn)
+                instantiated.append(r)
+            # sort by priority asc (lower value = higher priority)
+            self.rules = sorted(instantiated, key=lambda r: r.priority)
+            self.enabled = True
+        except Exception:
+            self.enabled = False
+
+    def evaluate(self, text: str, user_id: str) -> Optional[Dict[str, Any]]:
+        if not self.enabled:
+            return None
+        for rule in self.rules:
+            if rule.matches(text, user_id):
+                explanation = f"rule {rule.id} matched (priority={rule.priority})"
+                return {"rule": rule, "outcome": rule.outcome, "explanation": explanation}
+        return None
+
+--- __init__.py ---
+# policy package
+from .engine import PolicyEngine
+
+__all__ = ["PolicyEngine"]
+
+--- policy.json ---
+[
+  {
+    "id": "rule_block_known_bad_user",
+    "priority": 10,
+    "type": "user",
+    "users": ["bad_user"],
+    "outcome": "BLOCK",
+    "description": "Block known bad user"
+  },
+  {
+    "id": "rule_approve_safe_keyword",
+    "priority": 20,
+    "type": "keyword",
+    "keywords": ["safe"],
+    "outcome": "APPROVE",
+    "description": "Auto-approve safe content"
+  },
+  {
+    "id": "rule_review_maybe",
+    "priority": 30,
+    "type": "keyword",
+    "keywords": ["maybe"],
+    "outcome": "PENDING_REVIEW",
+    "description": "Medium risk content"
+  }
+]
+
+--- requirements.txt ---
+fastapi>=0.103.0
+uvicorn==0.22.0
+pydantic>=2.6.0
+pytest==7.4.2
+requests==2.31.0
+
+--- run_tests ---
+#!/usr/bin/env python3
+"""
+Simple cross-platform test runner: installs requirements and runs pytest.
+"""
+import os
+import subprocess
+import sys
+
+ROOT = os.path.dirname(__file__)
+R = os.path.join(ROOT, "requirements.txt")
+print("Installing requirements...")
+subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", R])
+print("Running tests...")
+subprocess.check_call([sys.executable, "-m", "pytest", "-q"])
+print("Done")
+
+--- run_tests.sh ---
+#!/usr/bin/env bash
+set -euo pipefail
+python -m pip install -r requirements.txt
+python -m pytest -q
+
+--- README.md ---
+# Baseline Content Moderation Service (with Policy-driven Multi-stage Moderation)
+
+Overview
+--------
+This repository contains a simple baseline content moderation service implemented with FastAPI. It supports a keyword blacklist and a manual review queue.
+
+New Feature: Policy-driven Multi-stage Moderation
+------------------------------------------------
+Policies provide configurable automated decisions before manual review. Policies are read from an external policy.json (or path defined by the `POLICY_FILE` env var). Policies are configuration-driven (not hard-coded) and support:
+
+- Keyword-based rules
+- User-based rules (exact user IDs and user ID prefixes)
+- Rule composition using `AND` / `OR` (composite rules)
+
+Decision mapping
+----------------
+Policy outcomes map to final statuses:
+- `APPROVE` => `APPROVED`
+- `PENDING_REVIEW` => `PENDING_REVIEW`
+- `REJECT` => `REJECTED`
+- `BLOCK` => `BLOCKED`
+
+Execution order and backward compatibility
+-----------------------------------------
+- If no policy file is present or policies are disabled, the service behaves exactly like the baseline (blacklist + manual review).
+- If policies are present, the service evaluates policies first; if a policy matches it decides the final state. If no policy matches, the service falls back to the original blacklist behavior.
+
+This design ensures policies can override blacklist behavior when explicitly configured.
+
+Files
+-----
+- baseline_moderation_service.py - main FastAPI service (modified to integrate policy engine)
+- engine.py - policy engine implementation (loading, rule types, evaluation)
+- policy.json - example policy configuration
+- tests - pytest test suite validating baseline and policy-driven behavior
+- requirements.txt - dependencies
+- run_tests / run_tests.sh - convenience scripts to run tests
+
+Policy file format (example)
+----------------------------
+policy.json is a JSON array of rule objects. Example rule:
+
+{
+  "id": "rule_approve_safe_keyword",
+  "priority": 10,
+  "type": "keyword",
+  "keywords": ["safe"],
+  "outcome": "APPROVE",
+  "description": "Auto-approve safe content"
+}
+
+Composite rule example (AND):
+
+{
+  "id": "p_and",
+  "type": "composite",
+  "operator": "AND",
+  "rules": [
+    {"type": "keyword", "keywords": ["secret"]},
+    {"type": "user", "user_prefixes": ["vip-"]}
+  ],
+  "outcome": "REJECT",
+  "description": "reject secret from vip users"
+}
+
+Running the service
+-------------------
+Install dependencies:
+
+    python -m pip install -r requirements.txt
+
+Run the FastAPI app:
+
+    uvicorn baseline_moderation_service:app --reload
+
+Running tests
+-------------
+Run the tests with the provided helper:
+
+    ./run_tests
+
+or
+
+    run_tests.sh
+
+Design decisions
+----------------
+- Policies are configuration-driven and loaded at startup. The engine sorts rules by `priority` and picks the first matching rule.
+- Execution order is: policies first, blacklist second (fallback). This lets administrators explicitly craft exceptions via policy files.
+- The policy engine is extensible: adding a new rule type requires implementing a Rule subclass and adding it to the instantiation logic in engine.py.
+
+--- test_policy_and_baseline.py ---
+import json
+import os
+from fastapi.testclient import TestClient
+import baseline_moderation_service as svc
+
+client = TestClient(svc.app)
+
+
+def setup_function():
+    # clear state before each test
+    svc.CONTENTS.clear()
+    svc.REVIEW_QUEUE.clear()
+
+
+def test_baseline_blacklist_blocks():
+    # disable policies by pointing to a non-existent file
+    svc.policy_engine.load(policy_file="nonexistent-policy.json")
+    resp = client.post("/content/submit", json={"user_id": "u1", "text": "this is spam content"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "BLOCKED"
+    assert "Blacklisted keyword hit" in body["reason"]
+
+def test_baseline_pending_review():
+    svc.policy_engine.load(policy_file="nonexistent-policy.json")
+    resp = client.post("/content/submit", json={"user_id": "u2", "text": "harmless content"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "PENDING_REVIEW"
+    # ensure it's queued
+    q = client.get("/review/queue")
+    assert q.json()["count"] >= 1
+
+def test_policy_auto_approve_low_risk(tmp_path):
+    # create a policy that auto-approves keyword 'safe'
+    policy = [
+        {"id": "p1", "priority": 10, "type": "keyword", "keywords": ["safe"], "outcome": "APPROVE", "description": "auto-approve safe"}
+    ]
+    pfile = tmp_path / "policy.json"
+    pfile.write_text(json.dumps(policy))
+
+    svc.policy_engine.load(policy_file=str(pfile))
+    resp = client.post("/content/submit", json={"user_id": "alice", "text": "this is safe content"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "APPROVED"
+    assert "p1" in body["reason"]
+
+def test_policy_pending_review_medium_risk(tmp_path):
+    policy = [
+        {"id": "p2", "priority": 10, "type": "keyword", "keywords": ["maybe"], "outcome": "PENDING_REVIEW", "description": "medium risk"}
+    ]
+    pfile = tmp_path / "policy.json"
+    pfile.write_text(json.dumps(policy))
+
+    svc.policy_engine.load(policy_file=str(pfile))
+    resp = client.post("/content/submit", json={"user_id": "bob", "text": "maybe problematic"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "PENDING_REVIEW"
+    assert "p2" in body["reason"]
+    q = client.get("/review/queue")
+    assert any(item["user_id"] == "bob" for item in q.json()["items"])
+
+def test_policy_high_risk_block_user(tmp_path):
+    policy = [
+        {"id": "p3", "priority": 5, "type": "user", "users": ["bad_user"], "outcome": "BLOCK", "description": "block bad user"}
+    ]
+    pfile = tmp_path / "policy.json"
+    pfile.write_text(json.dumps(policy))
+    svc.policy_engine.load(policy_file=str(pfile))
+
+    resp = client.post("/content/submit", json={"user_id": "bad_user", "text": "anything"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["status"] == "BLOCKED"
+    assert "p3" in body["reason"]
+
+def test_rule_composition_and_operator(tmp_path):
+    # composite rule: AND of keyword 'secret' and user prefix 'vip-'
+    policy = [
+        {
+            "id": "p_and",
+            "priority": 10,
+            "type": "composite",
+            "operator": "AND",
+            "rules": [
+                {"type": "keyword", "keywords": ["secret"]},
+                {"type": "user", "user_prefixes": ["vip-"]}
+            ],
+            "outcome": "REJECT",
+            "description": "reject secret from vip users"
+        }
+    ]
+    pfile = tmp_path / "policy.json"
+    pfile.write_text(json.dumps(policy))
+    svc.policy_engine.load(policy_file=str(pfile))
+
+    # matching case
+    resp = client.post("/content/submit", json={"user_id": "vip-joe", "text": "this contains secret"})
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "REJECTED"
+
+    # non-matching user prefix
+    resp2 = client.post("/content/submit", json={"user_id": "joe", "text": "this contains secret"})
+    assert resp2.json()["status"] == "PENDING_REVIEW"
+
+def test_policy_vs_blacklist_order(tmp_path):
+    # Policy that would approve 'spam' (conflicts with blacklist). Policy takes precedence per design.
+    policy = [
+        {"id": "p_spam_allow", "priority": 1, "type": "keyword", "keywords": ["spam"], "outcome": "APPROVE", "description": "allow spam via policy"}
+    ]
+    pfile = tmp_path / "policy.json"
+    pfile.write_text(json.dumps(policy))
+    svc.policy_engine.load(policy_file=str(pfile))
+
+    resp = client.post("/content/submit", json={"user_id": "u4", "text": "spammy content"})
+    assert resp.status_code == 200
+    body = resp.json()
+    # Expect APPROVED due to policy-first override of blacklist
+    assert body["status"] == "APPROVED"
+    assert "p_spam_allow" in body["reason"]
+
+def test_reason_for_blacklist_when_no_policy():
+    svc.policy_engine.load(policy_file="nonexistent-policy.json")
+    resp = client.post("/content/submit", json={"user_id": "u5", "text": "spam here"})
+    assert resp.json()["reason"].startswith("Blacklisted keyword hit")
+
+Notes
+- Tests pass locally (8 passed).
+- Execution order: policies are evaluated first; if no policy matches, the blacklist is evaluated (fallback). This is documented in README.
+
+If you want, I can:
+- Add more rule types (e.g. regex) and tests.
+- Add API endpoints for dynamic policy reloading or previewing evaluation of a piece of content.
+
+GitHub Copilot
+
+Made changes.
