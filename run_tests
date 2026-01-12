@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# One-click test runner: installs requirements and runs tests
+set -e
+python -m pip install -r requirements.txt
+pytest -q
