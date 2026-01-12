@@ -1,0 +1,37 @@
+[
+  {
+    "id": "low_keywords_auto_approve",
+    "description": "Low-risk keywords are auto-approved",
+    "type": "keyword",
+    "keywords": ["benign", "info", "announcement"],
+    "risk": "LOW"
+  },
+  {
+    "id": "medium_keyword_or_user",
+    "description": "Medium risk: keywords or unknown users go to review",
+    "match": {
+      "op": "any",
+      "conditions": [
+        { "type": "keyword", "keywords": ["question", "help"] },
+        { "type": "user", "prefixes": ["trial_", "temp_"] }
+      ]
+    },
+    "risk": "MEDIUM"
+  },
+  {
+    "id": "high_bad_actor",
+    "description": "High risk: known bad users are rejected",
+    "type": "user",
+    "ids": ["bad_user_1", "malicious_42"],
+    "risk": "HIGH",
+    "action": "REJECT"
+  },
+  {
+    "id": "high_blocked_words",
+    "description": "High risk blocked words cause BLOCK",
+    "type": "keyword",
+    "keywords": ["bannedword", "exploit"],
+    "risk": "HIGH",
+    "action": "BLOCK"
+  }
+]
