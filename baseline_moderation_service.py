@@ -10,6 +10,8 @@ from enum import Enum
 from typing import Dict, List, Optional
 import uuid
 import time
+import json
+import os
 
 app = FastAPI(title="Baseline Content Moderation Service", version="0.1.0")
 
@@ -50,7 +52,86 @@ class ContentItem(BaseModel):
     review_note: Optional[str] = None
 
 
-# --- In-memory stores (baseline) ---
+# --- Policy Engine ---
+class Rule:
+    def matches(self, req: SubmitContentRequest) -> bool:
+        raise NotImplementedError
+
+
+class KeywordRule(Rule):
+    def __init__(self, keywords: List[str], match: str = 'any'):
+        self.keywords = keywords
+        self.match = match  # 'any' or 'all'
+
+    def matches(self, req: SubmitContentRequest) -> bool:
+        lower = req.text.lower()
+        if self.match == 'any':
+            return any(kw.lower() in lower for kw in self.keywords)
+        elif self.match == 'all':
+            return all(kw.lower() in lower for kw in self.keywords)
+        return False
+
+
+class UserRule(Rule):
+    def __init__(self, users: List[str]):
+        self.users = users
+
+    def matches(self, req: SubmitContentRequest) -> bool:
+        return req.user_id in self.users
+
+
+class AndRule(Rule):
+    def __init__(self, rules: List[Rule]):
+        self.rules = rules
+
+    def matches(self, req: SubmitContentRequest) -> bool:
+        return all(r.matches(req) for r in self.rules)
+
+
+class OrRule(Rule):
+    def __init__(self, rules: List[Rule]):
+        self.rules = rules
+
+    def matches(self, req: SubmitContentRequest) -> bool:
+        return any(r.matches(req) for r in self.rules)
+
+
+class Policy:
+    def __init__(self, name: str, action: ContentStatus, rule: Rule):
+        self.name = name
+        self.action = action
+        self.rule = rule
+
+
+def _build_rule(rule_dict: dict) -> Rule:
+    if 'and' in rule_dict:
+        return AndRule([_build_rule(r) for r in rule_dict['and']])
+    elif 'or' in rule_dict:
+        return OrRule([_build_rule(r) for r in rule_dict['or']])
+    elif rule_dict.get('type') == 'keyword':
+        return KeywordRule(rule_dict['keywords'], rule_dict.get('match', 'any'))
+    elif rule_dict.get('type') == 'user':
+        return UserRule(rule_dict['users'])
+    else:
+        raise ValueError(f"Unknown rule type: {rule_dict}")
+
+
+def _load_policies() -> List[Policy]:
+    policy_file = 'policy.json'
+    if not os.path.exists(policy_file):
+        return []
+    with open(policy_file, 'r') as f:
+        data = json.load(f)
+    policies = []
+    for p in data:
+        rule = _build_rule(p['rules'])
+        policies.append(Policy(p['name'], ContentStatus(p['action']), rule))
+    return policies
+
+
+# Configuration
+ENABLE_POLICIES = os.getenv('ENABLE_POLICIES', 'true').lower() == 'true'
+POLICIES = _load_policies() if ENABLE_POLICIES else []
 BLACKLIST: List[str] = ["spam", "scam", "illegal"]  # baseline static list
 CONTENTS: Dict[str, ContentItem] = {}
 REVIEW_QUEUE: List[str] = []  # store content_id in FIFO order
@@ -104,6 +185,30 @@ def submit_content(req: SubmitContentRequest):
     content_id = str(uuid.uuid4())
     ts = _now()
 
+    # Policy-driven moderation if enabled
+    if ENABLE_POLICIES and POLICIES:
+        for policy in POLICIES:
+            if policy.rule.matches(req):
+                item = ContentItem(
+                    content_id=content_id,
+                    user_id=req.user_id,
+                    text=req.text,
+                    status=policy.action,
+                    created_at=ts,
+                    updated_at=ts,
+                    reason=f"Policy '{policy.name}' matched",
+                )
+                CONTENTS[content_id] = item
+                if policy.action == ContentStatus.PENDING_REVIEW:
+                    REVIEW_QUEUE.append(content_id)
+                return SubmitContentResponse(
+                    content_id=content_id,
+                    status=item.status,
+                    reason=item.reason,
+                )
+        # No policy matched, fall back to baseline
+
+    # Baseline logic: blacklist check
     hit = _hit_blacklist(req.text)
     if hit is not None:
         item = ContentItem(
